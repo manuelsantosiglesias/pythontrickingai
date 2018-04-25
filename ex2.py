@@ -21,27 +21,24 @@ original_image /= 255.
 original_image -= 0.5
 original_image *= 2.
 
-descalado = Image.fromarray(original_image.astype(np.uint8))
-descalado.show()
-#print(original_image)
-
 original_image = np.expand_dims(original_image, axis=0)
 
-# Precalcular cambios
+# cambios máximo por arriba y por abajo
 max_change_above = original_image + 0.01
 max_change_below = original_image - 0.01
 
 # Create a copy of the input image to hack on
 final = np.copy(original_image)
 
-learning_rate = 1.0
+learning_rate = 0.1
 cost_function = model_output_layer[0, object_type_to_fake]
 gradient_function = K.gradients(cost_function, model_input_layer)[0]
 grab_cost_and_gradients_from_model = K.function([model_input_layer, K.learning_phase()], [cost_function, gradient_function])
-cost = 0.0
+cost = 0.00
 
 # Bucle para calcular la aimgen
-while cost < 0.90:
+while cost < 0.80:
+    #print(grab_cost_and_gradients_from_model([final,0]))
     cost, gradients = grab_cost_and_gradients_from_model([final, 0])
     final += gradients * learning_rate
     final = np.clip(final, max_change_below, max_change_above)
@@ -49,9 +46,6 @@ while cost < 0.90:
 
     #print(grab_cost_and_gradients_from_model)
     print("Predicción del modelo (chihuahua): {:.8}%".format(cost * 100))
-
-descalado2 = Image.fromarray(final.astype(np.uint8))
-descalado2.show()
 
 # deescalado
 img = final[0]
